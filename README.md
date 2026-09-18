@@ -119,6 +119,10 @@ Query Builderのみ（生SQLやアソシエーションJOINは使わない）を
 - `testUpdate` — `UPDATE`文による更新と`modified`(`SYSTIMESTAMP`)の更新
 - `testDelete` — `DELETE`文による削除とその後の`SELECT`結果消失の確認
 - `testFullCrudCycle` — `INSERT`→`UPDATE`→`DELETE`を一連の流れで検証
+- `testBeginCommit` — `Connection::begin()`でトランザクション開始後`INSERT`し、
+  `commit()`で確定されることを確認
+- `testBeginRollback` — `begin()`後の`INSERT`が、コミット前は同一トランザクション内から
+  見えること、`rollback()`後は破棄されて残らないことを確認
 
 ## 個別テストの実行例
 

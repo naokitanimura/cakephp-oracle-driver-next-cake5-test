@@ -184,4 +184,40 @@ abstract class BooksRawSqlCrudTestCase extends TestCase
         );
         $this->assertSame(0, $this->countBooks());
     }
+
+    public function testBeginCommit(): void
+    {
+        $this->connection->begin();
+        $this->assertTrue($this->connection->inTransaction());
+
+        $id = $this->insertBook([
+            'title' => 'Transactional Commit',
+            'author' => 'Author D',
+            'price' => 15,
+        ]);
+
+        $this->connection->commit();
+
+        $this->assertFalse($this->connection->inTransaction());
+        $this->assertNotFalse($this->fetchBook($id));
+        $this->assertSame(1, $this->countBooks());
+    }
+
+    public function testBeginRollback(): void
+    {
+        $this->connection->begin();
+
+        $this->insertBook([
+            'title' => 'Transactional Rollback',
+            'author' => 'Author E',
+            'price' => 20,
+        ]);
+        // Visible to reads within the same, still-open transaction.
+        $this->assertSame(1, $this->countBooks());
+
+        $this->connection->rollback();
+
+        $this->assertFalse($this->connection->inTransaction());
+        $this->assertSame(0, $this->countBooks());
+    }
 }
