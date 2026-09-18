@@ -190,4 +190,49 @@ abstract class BooksQueryTestCase extends TestCase
         $this->assertSame(1, $byAuthor['John Smith']['book_count']);
         $this->assertEqualsWithDelta(9.99, $byAuthor['John Smith']['avg_price'], 0.001);
     }
+
+    public function testWhereInSubquery(): void
+    {
+        // Authors with at least one book priced above 40: CakeDC (49.00),
+        // Jane Doe (59.99).
+        $expensiveAuthors = $this->Books->find()
+            ->select(['author'])
+            ->where(['price >' => 40]);
+
+        $titles = $this->Books->find()
+            ->select(['title'])
+            ->where(['author IN' => $expensiveAuthors])
+            ->orderBy(['title' => 'ASC'])
+            ->all()
+            ->extract('title')
+            ->toList();
+
+        $this->assertSame(
+            ['Advanced Oracle SQL', 'CQRS with CakePHP', 'Oracle Database Fundamentals', 'Oracle Performance Tuning'],
+            $titles,
+        );
+    }
+
+    public function testWhereComparisonSubquery(): void
+    {
+        // Books priced above the average price of all books (35.694),
+        // computed via a scalar subquery rather than a PHP-side constant.
+        $averagePriceQuery = $this->Books->find();
+        $averagePriceQuery->select([
+            'avg_price' => $averagePriceQuery->func()->avg(new IdentifierExpression('price')),
+        ]);
+
+        $titles = $this->Books->find()
+            ->select(['title'])
+            ->where(['price >' => $averagePriceQuery])
+            ->orderBy(['title' => 'ASC'])
+            ->all()
+            ->extract('title')
+            ->toList();
+
+        $this->assertSame(
+            ['Advanced Oracle SQL', 'Oracle Database Fundamentals', 'Oracle Performance Tuning'],
+            $titles,
+        );
+    }
 }

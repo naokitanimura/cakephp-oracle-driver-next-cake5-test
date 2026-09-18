@@ -94,6 +94,8 @@ Query Builderのみ（生SQLやアソシエーションJOINは使わない）を
   (OracleにはネイティブのLIMIT/OFFSETがなく、ドライバーがROWNUM/FETCH FIRSTへ変換する)
 - `testCountWithCondition` — 条件付き`count()`
 - `testGroupByWithAggregateFunctions` — `groupBy()`と`func()->count()`/`func()->avg()`による集計
+- `testWhereInSubquery` — `where(['author IN' => $subquery])`によるサブクエリ(IN句)
+- `testWhereComparisonSubquery` — `where(['price >' => $subquery])`によるスカラサブクエリ比較
 
 ### ConnectionManager + 生SQLによるCRUDテスト
 
