@@ -56,8 +56,11 @@ docker compose run --rm app vendor/bin/phpunit
 
 ## テスト内容
 
+### ORM経由のCRUDテスト
+
 `tests/TestCase/Model/Table/` に以下のテストがあります。いずれも同じCRUDシナリオ
-(`BooksCrudTestCase`) を共有し、接続だけが異なります。
+(`BooksCrudTestCase`) を共有し、接続だけが異なります。CakePHPのORM (`Table::save()` /
+`get()` / `delete()`) を経由してCRUDを検証します。
 
 - `BooksCrudOci8Test` — `CakeDC\OracleDriver\Database\Driver\OracleOCI` 経由
 - `BooksCrudPdoOciTest` — `CakeDC\OracleDriver\Database\Driver\OraclePDO` 経由
@@ -70,11 +73,31 @@ docker compose run --rm app vendor/bin/phpunit
 - `testDelete` — 削除と`exists()`によるレコード消失の確認
 - `testFullCrudCycle` — 作成→更新→削除を一連の流れで検証
 
+### ConnectionManager + 生SQLによるCRUDテスト
+
+`tests/TestCase/Datasource/` には、ORM (Table) を介さず `ConnectionManager::get()` で
+取得した接続に対して直接SQLを実行するCRUDテストがあります。同じCRUDシナリオ
+(`BooksRawSqlCrudTestCase`) を共有し、接続だけが異なります。
+
+- `BooksRawSqlCrudOci8Test` — `CakeDC\OracleDriver\Database\Driver\OracleOCI` 経由
+- `BooksRawSqlCrudPdoOciTest` — `CakeDC\OracleDriver\Database\Driver\OraclePDO` 経由
+
+各テストクラスで以下を検証します（いずれも `Connection::execute()` によるプレースホルダ
+付き生SQLで実装）。
+
+- `testCreate` — `INSERT`文の実行と`lastInsertId()`によるID取得
+- `testRead` — `SELECT`文によるレコード取得
+- `testUpdate` — `UPDATE`文による更新と`modified`(`SYSTIMESTAMP`)の更新
+- `testDelete` — `DELETE`文による削除とその後の`SELECT`結果消失の確認
+- `testFullCrudCycle` — `INSERT`→`UPDATE`→`DELETE`を一連の流れで検証
+
 ## 個別テストの実行例
 
 ```sh
 docker compose run --rm app vendor/bin/phpunit --filter BooksCrudOci8Test
 docker compose run --rm app vendor/bin/phpunit --filter BooksCrudPdoOciTest
+docker compose run --rm app vendor/bin/phpunit --filter BooksRawSqlCrudOci8Test
+docker compose run --rm app vendor/bin/phpunit --filter BooksRawSqlCrudPdoOciTest
 ```
 
 ## 後片付け
