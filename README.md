@@ -1,7 +1,7 @@
 # cakephp-oracle-driver 実DB CRUD検証プロジェクト
 
 [CakeDC/cakephp-oracle-driver](https://github.com/CakeDC/cakephp-oracle-driver) の
-`6.next-cake5` ブランチ (CakePHP 5.3+, PHP 8.2+) を、実際の Oracle Database に接続して
+`6.next-cake5` ブランチ (CakePHP 5.4+, PHP 8.2+) を、実際の Oracle Database に接続して
 Create / Read / Update / Delete を検証するためのプロジェクトです。
 
 **PHP・Composer・Oracle Instant Client は一切ホストPCにインストールしません。**

@@ -7,7 +7,7 @@
         "php": ">=8.2",
         "ext-intl": "*",
         "ext-pdo": "*",
-        "cakephp/cakephp": "^5.3",
+        "cakephp/cakephp": "^5.4",
         "ioigoume/cakephp5-oracle-driver": "^1.0"
     },
     "require-dev": {
