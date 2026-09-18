@@ -73,6 +73,28 @@ docker compose run --rm app vendor/bin/phpunit
 - `testDelete` — 削除と`exists()`によるレコード消失の確認
 - `testFullCrudCycle` — 作成→更新→削除を一連の流れで検証
 
+### ORM経由のQuery Builderテスト
+
+`tests/TestCase/Model/Table/` には、上記CRUDテストとは別に、`Table::find()`の
+Query Builderのみ（生SQLやアソシエーションJOINは使わない）を対象とした検証があります。
+同じシナリオ(`BooksQueryTestCase`)を共有し、接続だけが異なります。各テストの`setUp()`で
+著者・価格の異なる5件の書籍を投入し、既知のデータセットに対してアサートします。
+
+- `BooksQueryOci8Test` — `CakeDC\OracleDriver\Database\Driver\OracleOCI` 経由
+- `BooksQueryPdoOciTest` — `CakeDC\OracleDriver\Database\Driver\OraclePDO` 経由
+
+各テストクラスで以下を検証します。
+
+- `testSelectSpecificFields` — `select()`で指定したフィールドのみ取得されること
+- `testWhereComparisonOperator` — `where(['price >' => ...])`などの比較演算子
+- `testWhereLike` — `where(['title LIKE' => ...])`による部分一致検索
+- `testWhereIn` — `where(['author IN' => [...]])`による複数値の絞り込み
+- `testOrderBy` — `orderBy()`による並び替え
+- `testLimitAndOffset` — `limit()`/`offset()`によるページネーション
+  (OracleにはネイティブのLIMIT/OFFSETがなく、ドライバーがROWNUM/FETCH FIRSTへ変換する)
+- `testCountWithCondition` — 条件付き`count()`
+- `testGroupByWithAggregateFunctions` — `groupBy()`と`func()->count()`/`func()->avg()`による集計
+
 ### ConnectionManager + 生SQLによるCRUDテスト
 
 `tests/TestCase/Datasource/` には、ORM (Table) を介さず `ConnectionManager::get()` で
@@ -96,6 +118,8 @@ docker compose run --rm app vendor/bin/phpunit
 ```sh
 docker compose run --rm app vendor/bin/phpunit --filter BooksCrudOci8Test
 docker compose run --rm app vendor/bin/phpunit --filter BooksCrudPdoOciTest
+docker compose run --rm app vendor/bin/phpunit --filter BooksQueryOci8Test
+docker compose run --rm app vendor/bin/phpunit --filter BooksQueryPdoOciTest
 docker compose run --rm app vendor/bin/phpunit --filter BooksRawSqlCrudOci8Test
 docker compose run --rm app vendor/bin/phpunit --filter BooksRawSqlCrudPdoOciTest
 ```
