@@ -3,20 +3,23 @@ declare(strict_types=1);
 
 namespace App\Test\TestCase\Model\Table;
 
+use App\Model\Entity\Author;
+use App\Model\Table\AuthorsTable;
 use App\Model\Table\BooksTable;
 use Cake\Database\Expression\IdentifierExpression;
 use Cake\Datasource\ConnectionManager;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Shared Query Builder assertions (Table::find() only -- no raw SQL, no
- * association JOINs) run against a real Oracle Database container.
- * Concrete subclasses only pick which connection (OCI8 or PDO_OCI) the
- * assertions run over.
+ * Shared Query Builder assertions (Table::find() only -- no raw SQL) run
+ * against a real Oracle Database container. Concrete subclasses only pick
+ * which connection (OCI8 or PDO_OCI) the assertions run over.
  */
 abstract class BooksQueryTestCase extends TestCase
 {
     protected BooksTable $Books;
+
+    protected AuthorsTable $Authors;
 
     abstract protected function connectionName(): string;
 
@@ -24,14 +27,31 @@ abstract class BooksQueryTestCase extends TestCase
     {
         parent::setUp();
 
+        $connection = ConnectionManager::get($this->connectionName());
+
         $this->Books = new BooksTable([
             'table' => 'books',
-            'connection' => ConnectionManager::get($this->connectionName()),
+            'connection' => $connection,
         ]);
-        // "books" is quoted because it was created quoted lowercase (see
-        // docker/oracle/startup/02_create_schema.sql); unquoted here would
-        // resolve to the folded-uppercase "BOOKS", which doesn't exist.
-        $this->Books->getConnection()->execute('TRUNCATE TABLE "books"');
+        $this->Authors = new AuthorsTable([
+            'table' => 'authors',
+            'connection' => $connection,
+        ]);
+        // Manually-instantiated Table objects (as above) don't go through
+        // the TableLocator, so the belongsTo('Authors', ...) association
+        // declared in BooksTable::initialize() would otherwise resolve its
+        // target via the locator using the *default* connection -- which
+        // isn't configured in this project (only oracle_oci8/oracle_pdo
+        // are). Point it at our manually-connected $this->Authors instead.
+        $this->Books->getAssociation('Authors')->setTarget($this->Authors);
+
+        // "books"/"authors" are quoted because they were created quoted
+        // lowercase (see docker/oracle/startup/02_create_schema.sql);
+        // unquoted here would resolve to the folded-uppercase table names,
+        // which don't exist. "books" is truncated first since it holds the
+        // foreign key to "authors".
+        $connection->execute('TRUNCATE TABLE "books"');
+        $connection->execute('TRUNCATE TABLE "authors"');
 
         $this->seedBooks();
     }
@@ -234,5 +254,37 @@ abstract class BooksQueryTestCase extends TestCase
             ['Advanced Oracle SQL', 'Oracle Database Fundamentals', 'Oracle Performance Tuning'],
             $titles,
         );
+    }
+
+    public function testContainAssociation(): void
+    {
+        $author = $this->Authors->save($this->Authors->newEntity(['name' => 'CakeDC']));
+        $this->assertNotFalse($author);
+
+        // The pre-seeded books (seedBooks()) all have a NULL author_id, so
+        // this is the only row with a real Authors association.
+        $linked = $this->Books->save($this->Books->newEntity([
+            'title' => 'Oracle Associations in Practice',
+            'author' => 'CakeDC',
+            'author_id' => $author->id,
+            'price' => 44.0,
+        ]));
+        $this->assertNotFalse($linked);
+
+        $books = $this->Books->find()
+            ->contain('Authors')
+            ->all()
+            ->toList();
+
+        $this->assertCount(6, $books);
+
+        $withAuthor = current(array_filter($books, fn ($book) => $book->id === $linked->id));
+        $this->assertNotFalse($withAuthor);
+        $this->assertInstanceOf(Author::class, $withAuthor->author_ref);
+        $this->assertSame('CakeDC', $withAuthor->author_ref->name);
+
+        $withoutAuthor = current(array_filter($books, fn ($book) => $book->title === 'PHP for Beginners'));
+        $this->assertNotFalse($withoutAuthor);
+        $this->assertNull($withoutAuthor->author_ref);
     }
 }

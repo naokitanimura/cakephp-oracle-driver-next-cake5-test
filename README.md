@@ -47,12 +47,14 @@ docker compose run --rm app vendor/bin/phpunit
 ```
 
 起動時、`docker/oracle/startup/` 配下の SQL スクリプトが自動実行され、
-アプリ用ユーザー `testuser` と検証用テーブル `books` が作成されます
+アプリ用ユーザー `testuser` と検証用テーブル `books`/`authors` が作成されます
 （`container-registry.oracle.com/database/free:*-lite` は事前構築済みDBイメージのため
 `/opt/oracle/scripts/setup`(初回のみ)ではなく `/opt/oracle/scripts/startup`(毎回起動時)
 が使われます。スクリプト側は`CREATE USER`の存在チェックや`CREATE TABLE IF NOT EXISTS`で
-再実行に対して安全になっています）。データを作り直したい場合は
-`docker compose down -v` でボリュームを含めて削除してください。
+再実行に対して安全になっています）。データを作り直したい場合、あるいは
+`docker/oracle/startup/02_create_schema.sql` のテーブル定義を変更した場合は、
+`CREATE TABLE IF NOT EXISTS`がテーブル存在時は何もしないため
+`docker compose down -v` でボリュームを含めて削除し、スキーマを作り直してください。
 
 ## テスト内容
 
@@ -96,6 +98,9 @@ Query Builderのみ（生SQLやアソシエーションJOINは使わない）を
 - `testGroupByWithAggregateFunctions` — `groupBy()`と`func()->count()`/`func()->avg()`による集計
 - `testWhereInSubquery` — `where(['author IN' => $subquery])`によるサブクエリ(IN句)
 - `testWhereComparisonSubquery` — `where(['price >' => $subquery])`によるスカラサブクエリ比較
+- `testContainAssociation` — `contain('Authors')`による`books.author_id -> authors.id`の
+  `belongsTo`関連読み込み(`BooksTable`に定義。関連先エンティティは既存の`author`文字列カラムと
+  衝突しないよう`propertyName: 'author_ref'`で`author_ref`プロパティに載る)
 
 ### ConnectionManager + 生SQLによるCRUDテスト
 

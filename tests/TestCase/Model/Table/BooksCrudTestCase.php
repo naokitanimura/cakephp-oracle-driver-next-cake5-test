@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Test\TestCase\Model\Table;
 
+use App\Model\Table\AuthorsTable;
 use App\Model\Table\BooksTable;
 use Cake\Datasource\ConnectionManager;
 use PHPUnit\Framework\TestCase;
@@ -22,14 +23,28 @@ abstract class BooksCrudTestCase extends TestCase
     {
         parent::setUp();
 
+        $connection = ConnectionManager::get($this->connectionName());
+
         $this->Books = new BooksTable([
             'table' => 'books',
-            'connection' => ConnectionManager::get($this->connectionName()),
+            'connection' => $connection,
         ]);
+        // Manually-instantiated Table objects (as above) don't go through
+        // the TableLocator, so the belongsTo('Authors', ...) association
+        // declared in BooksTable::initialize() would otherwise resolve its
+        // target via the locator using the *default* connection -- which
+        // isn't configured in this project (only oracle_oci8/oracle_pdo
+        // are) -- as soon as save() touches associations. Point it at a
+        // manually-connected Authors table instead.
+        $this->Books->getAssociation('Authors')->setTarget(new AuthorsTable([
+            'table' => 'authors',
+            'connection' => $connection,
+        ]));
+
         // "books" is quoted because it was created quoted lowercase (see
         // docker/oracle/startup/02_create_schema.sql); unquoted here would
         // resolve to the folded-uppercase "BOOKS", which doesn't exist.
-        $this->Books->getConnection()->execute('TRUNCATE TABLE "books"');
+        $connection->execute('TRUNCATE TABLE "books"');
     }
 
     public function testCreate(): void
