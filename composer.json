@@ -13,7 +13,7 @@
         "php": ">=8.2",
         "ext-intl": "*",
         "ext-pdo": "*",
-        "cakephp/cakephp": "^5.3",
+        "cakephp/cakephp": "^5.4",
         "cakedc/cakephp-oracle-driver": "dev-6.next-cake5"
     },
     "require-dev": {
