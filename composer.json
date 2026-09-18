@@ -1,20 +1,14 @@
 {
     "name": "cakedc/cakephp-oracle-driver-crud-test",
-    "description": "Real Oracle Database CRUD test project for CakeDC/cakephp-oracle-driver (6.next-cake5)",
+    "description": "Real Oracle Database CRUD test project for ioigoume/cakephp5-oracle-driver",
     "type": "project",
     "license": "MIT",
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/CakeDC/cakephp-oracle-driver"
-        }
-    ],
     "require": {
         "php": ">=8.2",
         "ext-intl": "*",
         "ext-pdo": "*",
         "cakephp/cakephp": "^5.3",
-        "cakedc/cakephp-oracle-driver": "dev-6.next-cake5"
+        "ioigoume/cakephp5-oracle-driver": "^1.0"
     },
     "require-dev": {
         "phpunit/phpunit": "^11.5 | ^12.0"

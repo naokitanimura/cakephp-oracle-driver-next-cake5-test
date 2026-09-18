@@ -9,14 +9,14 @@ use function Cake\Core\env;
  * point at the same Oracle Database Free container / FREEPDB1 service and
  * the same "testuser" schema created by docker/oracle/startup/01_create_user.sql.
  *
- * See vendor/cakedc/cakephp-oracle-driver/README.md for the full list of
+ * See vendor/ioigoume/cakephp5-oracle-driver/README.md for the full list of
  * supported Datasource options.
  */
 return [
     'Datasources' => [
         'oracle_oci8' => [
-            'className' => 'CakeDC\OracleDriver\Database\OracleConnection',
-            'driver' => 'CakeDC\OracleDriver\Database\Driver\OracleOCI',
+            'className' => 'Ioigoume\OracleDriver\Database\OracleConnection',
+            'driver' => 'Ioigoume\OracleDriver\Database\Driver\OracleOCI',
             'persistent' => false,
             'host' => env('DB_HOST', 'oracle'),
             'port' => env('DB_PORT', '1521'),
@@ -33,8 +33,8 @@ return [
             'quoteIdentifiers' => true,
         ],
         'oracle_pdo' => [
-            'className' => 'CakeDC\OracleDriver\Database\OracleConnection',
-            'driver' => 'CakeDC\OracleDriver\Database\Driver\OraclePDO',
+            'className' => 'Ioigoume\OracleDriver\Database\OracleConnection',
+            'driver' => 'Ioigoume\OracleDriver\Database\Driver\OraclePDO',
             'persistent' => false,
             'host' => env('DB_HOST', 'oracle'),
             'port' => env('DB_PORT', '1521'),
