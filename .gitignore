@@ -1,0 +1,11 @@
+/vendor/
+/tmp/*
+!/tmp/cache
+!/tmp/logs
+/tmp/cache/*
+/tmp/logs/*
+!/tmp/cache/.gitkeep
+!/tmp/logs/.gitkeep
+.env
+composer.lock
+/.phpunit.cache/

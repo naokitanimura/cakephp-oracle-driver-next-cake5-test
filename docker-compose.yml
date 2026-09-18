@@ -1,0 +1,42 @@
+services:
+  oracle:
+    image: container-registry.oracle.com/database/free:23.26.3.0-lite
+    platform: linux/amd64
+    environment:
+      ORACLE_PWD: ${ORACLE_PWD:-OraclePass123}
+      ORACLE_PDB: FREEPDB1
+    ports:
+      - "1521:1521"
+    volumes:
+      - oracle_data:/opt/oracle/oradata
+      - ./docker/oracle/startup:/opt/oracle/scripts/startup:ro
+    healthcheck:
+      test: ["CMD", "/opt/oracle/checkDBStatus.sh"]
+      interval: 10s
+      timeout: 5s
+      retries: 60
+      start_period: 180s
+
+  app:
+    platform: linux/amd64
+    build:
+      context: ./docker/app
+    volumes:
+      - .:/app
+      - vendor:/app/vendor
+    working_dir: /app
+    depends_on:
+      oracle:
+        condition: service_healthy
+    environment:
+      DB_HOST: oracle
+      DB_PORT: 1521
+      DB_SERVICE: ${DB_SERVICE:-FREEPDB1}
+      DB_USERNAME: ${DB_USERNAME:-testuser}
+      DB_PASSWORD: ${DB_PASSWORD:-TestUserPass123}
+    tty: true
+    command: ["tail", "-f", "/dev/null"]
+
+volumes:
+  oracle_data:
+  vendor:
