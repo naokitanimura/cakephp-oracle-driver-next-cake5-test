@@ -1,8 +1,32 @@
 # cakephp-oracle-driver 実DB CRUD検証プロジェクト
 
-[CakeDC/cakephp-oracle-driver](https://github.com/CakeDC/cakephp-oracle-driver) の
-`6.next-cake5` ブランチ (CakePHP 5.4+, PHP 8.2+) を、実際の Oracle Database に接続して
-Create / Read / Update / Delete を検証するためのプロジェクトです。
+> [!WARNING]
+> **このブランチ (`test/ioigoume-oracle-driver`) は検証対象のドライバーを差し替えています。**
+>
+> `main` ブランチは [CakeDC/cakephp-oracle-driver](https://github.com/CakeDC/cakephp-oracle-driver)
+> の `6.next-cake5` ブランチを対象としていますが、このブランチでは互換性確認のため
+> [ioigoume/cakephp5-oracle-driver](https://packagist.org/packages/ioigoume/cakephp5-oracle-driver)
+> (`^1.0`) に差し替えています。変更箇所は以下のとおりです。
+>
+> - `composer.json`: `cakedc/cakephp-oracle-driver` を `ioigoume/cakephp5-oracle-driver` に置換
+>   (CakeDC の VCS リポジトリ定義も削除)
+> - `config/app_local.php`: `className` / `driver` の namespace を
+>   `CakeDC\OracleDriver\...` から `Ioigoume\OracleDriver\...` に変更
+>
+> 差し替え時 (コミット `269f449`、CakePHP 5.3) の確認結果は **非互換** でした。
+>
+> - `OraclePDO`: CakePHP の抽象メソッド `Driver::supports()` を実装しておらず fatal error
+> - `OracleOCI`: `OracleStatement` が `Driver::execute()` から呼ばれる `bufferResults()` に
+>   対応しておらず、OCI8 のテスト全 23 件がエラー
+>
+> このブランチは互換性の確認のみが目的のため、ドライバー側の修正は加えていません。
+> なお、その後 CakePHP の依存制約を `^5.4` に更新しているため、5.4 での結果は
+> テストを再実行して確認してください。
+
+[ioigoume/cakephp5-oracle-driver](https://packagist.org/packages/ioigoume/cakephp5-oracle-driver)
+(CakePHP 5.4+, PHP 8.2+) を、実際の Oracle Database に接続して
+Create / Read / Update / Delete を検証するためのプロジェクトです
+(`main` ブランチの CakeDC 版と同じテストで比較します)。
 
 **PHP・Composer・Oracle Instant Client は一切ホストPCにインストールしません。**
 すべて Docker コンテナ内 (`app` サービス) に構築し、Oracle Database も同じ
@@ -64,8 +88,8 @@ docker compose run --rm app vendor/bin/phpunit
 (`BooksCrudTestCase`) を共有し、接続だけが異なります。CakePHPのORM (`Table::save()` /
 `get()` / `delete()`) を経由してCRUDを検証します。
 
-- `BooksCrudOci8Test` — `CakeDC\OracleDriver\Database\Driver\OracleOCI` 経由
-- `BooksCrudPdoOciTest` — `CakeDC\OracleDriver\Database\Driver\OraclePDO` 経由
+- `BooksCrudOci8Test` — `Ioigoume\OracleDriver\Database\Driver\OracleOCI` 経由
+- `BooksCrudPdoOciTest` — `Ioigoume\OracleDriver\Database\Driver\OraclePDO` 経由
 
 各テストクラスで以下を検証します。
 
@@ -82,8 +106,8 @@ Query Builderのみ（生SQLやアソシエーションJOINは使わない）を
 同じシナリオ(`BooksQueryTestCase`)を共有し、接続だけが異なります。各テストの`setUp()`で
 著者・価格の異なる5件の書籍を投入し、既知のデータセットに対してアサートします。
 
-- `BooksQueryOci8Test` — `CakeDC\OracleDriver\Database\Driver\OracleOCI` 経由
-- `BooksQueryPdoOciTest` — `CakeDC\OracleDriver\Database\Driver\OraclePDO` 経由
+- `BooksQueryOci8Test` — `Ioigoume\OracleDriver\Database\Driver\OracleOCI` 経由
+- `BooksQueryPdoOciTest` — `Ioigoume\OracleDriver\Database\Driver\OraclePDO` 経由
 
 各テストクラスで以下を検証します。
 
@@ -108,8 +132,8 @@ Query Builderのみ（生SQLやアソシエーションJOINは使わない）を
 取得した接続に対して直接SQLを実行するCRUDテストがあります。同じCRUDシナリオ
 (`BooksRawSqlCrudTestCase`) を共有し、接続だけが異なります。
 
-- `BooksRawSqlCrudOci8Test` — `CakeDC\OracleDriver\Database\Driver\OracleOCI` 経由
-- `BooksRawSqlCrudPdoOciTest` — `CakeDC\OracleDriver\Database\Driver\OraclePDO` 経由
+- `BooksRawSqlCrudOci8Test` — `Ioigoume\OracleDriver\Database\Driver\OracleOCI` 経由
+- `BooksRawSqlCrudPdoOciTest` — `Ioigoume\OracleDriver\Database\Driver\OraclePDO` 経由
 
 各テストクラスで以下を検証します（いずれも `Connection::execute()` によるプレースホルダ
 付き生SQLで実装）。
